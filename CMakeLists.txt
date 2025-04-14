@@ -30,9 +30,44 @@ message(STATUS)
 # Config
 # ######################################################################################################################
 
-set(AOS_CORE_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/aos_core_common_cpp/external/aos_core_lib_cpp)
-set(AOS_CORE_COMMON_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/aos_core_common_cpp)
+if(NOT DEFINED AOS_EXTERNAL_DIR)
+    set(AOS_EXTERNAL_DIR external)
+endif()
+
+get_filename_component(AOS_CORE_LIB_DIR ${AOS_EXTERNAL_DIR}/aos_core_lib_cpp REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
+get_filename_component(
+    AOS_CORE_COMMON_LIB_DIR ${AOS_EXTERNAL_DIR}/aos_core_common_cpp REALPATH BASE_DIR "${CMAKE_BINARY_DIR}"
+)
+get_filename_component(AOS_CORE_API_DIR ${AOS_EXTERNAL_DIR}/aos_core_api REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
+
 set(AOS_STACK_USAGE 4096)
+
+# ######################################################################################################################
+# Fetch external projects
+# ######################################################################################################################
+
+include(FetchContent)
+
+FetchContent_Populate(
+    aos_core_lib_cpp
+    GIT_REPOSITORY https://github.com/aosedge/aos_core_lib_cpp.git
+    GIT_TAG develop
+    SOURCE_DIR ${AOS_CORE_LIB_DIR}
+)
+
+FetchContent_Populate(
+    aos_core_common_cpp
+    GIT_REPOSITORY https://github.com/al1img/aos_core_common_cpp.git
+    GIT_TAG develop
+    SOURCE_DIR ${AOS_CORE_COMMON_LIB_DIR}
+)
+
+FetchContent_Populate(
+    aos_core_api
+    GIT_REPOSITORY https://github.com/aosedge/aos_core_api.git
+    GIT_TAG develop
+    SOURCE_DIR ${AOS_CORE_API_DIR}
+)
 
 # ######################################################################################################################
 # External project options
@@ -70,7 +105,7 @@ if(NOT GIT_FOUND)
     set(GIT_EXECUTABLE git)
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${AOS_CORE_LIB_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH ${AOS_CORE_LIB_DIR}/cmake)
 
 execute_process(
     OUTPUT_FILE ${CMAKE_BINARY_DIR}/version.hpp
@@ -133,17 +168,16 @@ endif()
 # Targets
 # ######################################################################################################################
 
-add_subdirectory(external/aos_core_common_cpp/external/aos_core_api)
-add_subdirectory(external/aos_core_common_cpp/external/aos_core_lib_cpp/src/common)
-add_subdirectory(external/aos_core_common_cpp/external/aos_core_lib_cpp/src/iam)
-add_subdirectory(external/aos_core_common_cpp/external/aos_core_lib_cpp/src/sm)
-add_subdirectory(external/aos_core_common_cpp/src)
+add_subdirectory(${AOS_CORE_API_DIR})
+add_subdirectory(${AOS_CORE_LIB_DIR}/src/common)
+add_subdirectory(${AOS_CORE_LIB_DIR}/src/sm)
+add_subdirectory(${AOS_CORE_COMMON_LIB_DIR}/src)
 add_subdirectory(src)
 
 if(WITH_TEST)
-    add_subdirectory(external/aos_core_common_cpp/external/aos_core_lib_cpp/tests/utils)
-    add_subdirectory(external/aos_core_common_cpp/external/aos_core_lib_cpp/tests/include)
-    add_subdirectory(external/aos_core_common_cpp/tests/include)
+    add_subdirectory(${AOS_CORE_LIB_DIR}/tests/utils)
+    add_subdirectory(${AOS_CORE_LIB_DIR}/tests/include)
+    add_subdirectory(${AOS_CORE_COMMON_LIB_DIR}/tests/include)
     add_subdirectory(tests)
 endif()
 
